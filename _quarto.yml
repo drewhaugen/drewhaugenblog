@@ -17,5 +17,10 @@ format:
     theme: flatly
     css: styles.css
 
+comments:
+  giscus:
+    repo: drewhaugen/drewhaugenblog
+
+
 editor: visual
 
