@@ -1,0 +1,11 @@
+---
+title: "Baseball Savant"
+author: "Drew Haugen"
+date: "2023-04-02"
+categories: [news, code, analysis]
+image: "savant.jpg"
+---
+
+# Baseball Savant
+
+You can access baseball savant at [this link](https://baseballsavant.mlb.com/ "this is baseball savant"){style="color: blue;"}.
