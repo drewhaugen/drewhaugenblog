@@ -9,3 +9,17 @@ image: "savant.jpg"
 # Baseball Savant
 
 You can access baseball savant at [this link](https://baseballsavant.mlb.com/ "this is baseball savant"){style="color: blue;"}.
+
+Additionally, this is some R code:
+
+```{r}
+#| include: false
+number <- 10
+
+```
+
+This code prints the number 10:
+
+```{r}
+print(number)
+```
