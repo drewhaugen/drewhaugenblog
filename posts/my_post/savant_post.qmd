@@ -27,17 +27,14 @@ You can also create plots:
 ```{r}
 #| include: false
 library(tidyverse)
-df <- tibble(
-  x = c(1, 2, 3, 4, 5),
-  y = c(6, 7, 8, 9, 10),
-  z = c(11, 12, 13, 14, 15)
-)
+hr_df <- read_csv("~/hr_df.csv")
 ```
 
 ```{r}
 #| echo: false
 
-df %>%
-  ggplot(aes(x, y)) +
-  geom_point(aes(color = z))
+hr_df %>%
+  ggplot(aes(outcome, hr_perc)) +
+  geom_point(aes(color = hr_perc)) +
+  coord_flip()
 ```

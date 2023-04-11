@@ -1,5 +1,5 @@
 {
-  "hash": "a4aa28b472735953e4a90342aa4a1a3c",
+  "hash": "62b9a7e623809d9591d39852c4cd14a2",
   "result": {
     "markdown": "---\ntitle: \"Baseball Savant\"\nauthor: \"Drew Haugen\"\ndate: \"2023-04-02\"\ncategories: [news, code, analysis]\nimage: \"savant.jpg\"\n---\n\n\n# Baseball Savant\n\nYou can access baseball savant at [this link](https://baseballsavant.mlb.com/ \"this is baseball savant\"){style=\"color: blue;\"}.\n\nAdditionally, this is some R code:\n\n\n\n\n\nThis code prints the number 10:\n\n\n::: {.cell}\n\n```{.r .cell-code}\nprint(number)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n[1] 10\n```\n:::\n:::\n\nYou can also create plots:\n\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](savant_post_files/figure-html/unnamed-chunk-4-1.png){width=672}\n:::\n:::\n",
     "supporting": [
