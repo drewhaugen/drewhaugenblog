@@ -1,0 +1,14 @@
+{
+  "hash": "6567fc9523943894a2830f4fdfefcc8c",
+  "result": {
+    "markdown": "---\ntitle: \"Baseball Savant\"\nauthor: \"Drew Haugen\"\ndate: \"2023-04-02\"\ncategories: [news, code, analysis]\nimage: \"savant.jpg\"\n---\n\n\n# Baseball Savant\n\nYou can access baseball savant at [this link](https://baseballsavant.mlb.com/ \"this is baseball savant\"){style=\"color: blue;\"}.\n\nAdditionally, this is some R code:\n\n\n\n\n\nThis code prints the number 10:\n\n\n::: {.cell}\n\n```{.r .cell-code}\nprint(number)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n[1] 10\n```\n:::\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
