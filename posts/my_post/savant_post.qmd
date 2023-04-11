@@ -23,3 +23,21 @@ This code prints the number 10:
 ```{r}
 print(number)
 ```
+You can also create plots:
+```{r}
+#| include: false
+library(tidyverse)
+df <- tibble(
+  x = c(1, 2, 3, 4, 5),
+  y = c(6, 7, 8, 9, 10),
+  z = c(11, 12, 13, 14, 15)
+)
+```
+
+```{r}
+#| echo: false
+
+df %>%
+  ggplot(aes(x, y)) +
+  geom_point(aes(color = z))
+```

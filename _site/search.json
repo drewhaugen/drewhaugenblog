@@ -32,6 +32,6 @@
     "href": "posts/my_post/savant_post.html",
     "title": "Baseball Savant",
     "section": "",
-    "text": "Baseball Savant\nYou can access baseball savant at this link.\nAdditionally, this is some R code:\nThis code prints the number 10:\n\nprint(number)\n\n[1] 10"
+    "text": "Baseball Savant\nYou can access baseball savant at this link.\nAdditionally, this is some R code:\nThis code prints the number 10:\n\nprint(number)\n\n[1] 10\n\n\nYou can also create plots:"
   }
 ]
