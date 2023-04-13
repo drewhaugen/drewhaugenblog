@@ -13,5 +13,8 @@
   },
   "posts/my_post/savant_post.qmd": {
     "savant_post.html": "c4c14942"
+  },
+  "posts/first_summarizing_tutorial/summarizing_sc_tutorial.qmd": {
+    "summarizing_sc_tutorial.html": "6c3c7b52"
   }
 }
