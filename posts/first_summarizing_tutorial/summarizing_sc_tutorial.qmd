@@ -1,12 +1,15 @@
 ---
 title: "Exploring Statcast Data in R"
 author: "Drew Haugen"
-date: "2023-04-02"
+date: "2023-04-15"
 categories: [Code, Tutorial, Analysis]
 image: "thumbnail_plot.jpg"
 ---
+
 R is an awesome tool with a relatively small learning curve, and through the efforts of a lot of awesome people, there is a massive collection of resources to learn R (for free!). This tutorial is for those who are already familiar with R, but if you're a beginner, I can't recommend [R4DS](https://r4ds.had.co.nz/) enough. It is a perfect guide for beginners, and especially emphasizes use of the `{tidyverse}`, which makes the entire data science process and workflow far more intuitive and uniform. Now, on to the tutorial!
+
 ### Load in Packages
+
 For this analysis, you're going to need a few packages. The [`{tidyverse}`](https://www.tidyverse.org/) is essential for every project and includes packages for data manipulation, visualization, and more. Additionally, the [`{baseballr}`](https://billpetti.github.io/baseballr/) package lets us scrape Statcast data directly from the MLB API into our R session. Lastly, the [`{gt}`](https://gt.rstudio.com/) and [`{gtExtras}`](https://jthomasmock.github.io/gtExtras/) packages help us easily build presentable tables and the [`{mlbplotR}`](https://camdenk.github.io/mlbplotR/) package makes it easy to incorporate MLB logos and headshots into our plots an tables.
 
 ```{r}
@@ -55,9 +58,11 @@ dim(mlb_data)
 # using the RStudio IDE
 ```
 
-The `dim()` function tell us that our dataframe has 46,042 rows of 92 different variables. You can look at the different columns and the type of data they store with the `str()` function. 
-### Clean Data 
-Our data is relatively clean, as the implementation of Hawkeye league-wide has greatly decreased the amount of pitches with missed readings, but let's drop all rows that are missing some key information and create a few new binary columns that give us some info on the result of the pitch.
+The `dim()` function tell us that our dataframe has 46,042 rows of 92 different variables. You can look at the different columns and the type of data they store with the `str()` function.
+
+### Add Data
+
+We need to create some additional columns that will easily let us summarize our data, and this is pretty easy with the `dplyr::mutate()` + `dplyr::if_else()` combo. The `description` column of our data has info on what events happened on each pitch, so let's create some binary indicators using this column that tell us if different events like a swing, whiff or chase happened, as well as if a pitch was in the zone zone or not. I created the `swing_events` and `whiff_events` vector to hold all the different values of `description` are swing events, as well as whiff events. Using the `%in%` operator, we can then check if the event in `description` is one of the events from each vector. This procedure is how you can determine if a value is included in a group of many possible values.
 
 ```{r}
 #| label: add_columns
@@ -75,32 +80,30 @@ whiff_events <- c(
 full_mlb <- mlb_data %>%
   # drop any missing rows
   mutate(
-    pfx_x_adj = if_else(p_throws == "R", pfx_x, -pfx_x), # standardize pfx_x for pitcher hand
-    release_pos_x_adj = if_else(
-      p_throws == "R", release_pos_x, release_pos_x, -release_pos_x
-    ), # standardize release_pos_x for pitcher hand
     is_swing = if_else(description %in% swing_events, 1, 0), # binary indicator for a swing
     is_whiff = if_else(description %in% whiff_events, 1, 0), # binary indicator for a whiff
     is_in_zone = if_else(zone %in% 1:9, 1, 0), # binary indicator for in-zone
-    is_out_zone = if_else(zone > 9, 1, 0), # binary indicator our out-of-zone
+    is_out_zone = if_else(zone > 9, 1, 0), # binary indicator for out-of-zone
     is_chase = if_else(
       is_swing == 1 & is_out_zone == 1, 1, 0
-    ),
+    ), #binary indicator for swing
     is_contact = if_else(
       description %in% c("hit_into_play", "foul", "foul_pitchout"), 1, 0
-    ),
+    ), # binary indicator for contact
     batting_team = if_else(
       inning_topbot == "Top", away_team, home_team
-    ),
+    ), # column for batting team
     pitching_team = if_else(
       inning_topbot == "Top", home_team, away_team
-    )
+    ), # column for pitching team
   )
 ```
 
-Now, with our data ready to analyze, let's dive in! 
-### Summarize Data by Pitch Type 
-Using the `.by` argument of the `summarize()` function (this is preferable to using `group_by()` because it automatically drops groups, so using `ungroup()` is no longer needed), let's aggregate a few different metrics for each pitch.
+Now, that our data has everything we need, let's move on to summarizing and exploring it!
+
+### Summarize Data by Pitch Type
+
+Data can be most efficiently aggregated using `dplyr::summarize()`, and to aggregate by different groups, you can use use `dplyr::group_by()` function to group the data before passing it to `summarize()`. It is best practice to ungroup data after the grouping is no longer need, and this can be done with `dplyr::ungroup()`. However, recently, the `{dplyr}` team added the `.by` argument to `summarize()` were one can supply the name of a column or a vector of column names to perform operations by, essentially a grouping. Grouups are automatically dropped after operations are performed. This addition is convenient because it eliminates the need to use `group_by()` and `ungroup()` in aggregations. For this aggregation let's find the Swing%, SwStr%, Whiff%, Zone%, Chase%, and Run Value/100 for each pitch type, filter out out any rows that are missing a pitch type at the beginning and after aggregating let's drop any pitch type that has been thrown 25 times or less, and the FA pitch type (which is the "Other" pitch types, essentially pitches that didn't get classified).
 
 ```{r}
 #| label: summarize_by_pitch_type
@@ -126,7 +129,7 @@ pitch_type_rates <- full_mlb %>%
   )
 ```
 
-Now, let's compare the results the different pitch types have garnered this year. A `gt` table with `data_color()` provides a quick visual representation with the specific figures.
+Now, let's compare the results the different pitch types have garnered this year. A `{gt}` table with `data_color()` provides a quick visual representation along with the underlying numeric figures.
 
 ```{r}
 # Statcast hex codes
@@ -190,10 +193,7 @@ pitch_type_rates %>%
   opt_interactive()
   
 ```
-
-### Stats Over Time
-
-It's also fascinating to look into how different statistics progress over time. To visualize multiple statistics over time, we can summarize different stats for each game date, and then pivot the data using `pivot_longer()`, which will create a row for every statistic for every day. Transforming the data into this format makes it possible to split groups out by color in plots
+It's also possible to compare each statistic visuallyfor all the pitch types by leveraging`ggplot2::facet_wrap()`, which will create a panel for each unique value of the column you supply it with. To get the data in a format that allows this to work, we need to pivot it into a row for every combination of pitch type and statistic. Luckily, this can easily be done using `tidyr::pivot_longer()`. After the columns containing the different stat value have been pivoted into a single row, we'll change that row using `dplyr::case_match()` to have more presentable names for the statistic than the names that were used for them in the data (eg. 'swstr_perc' to SwStr%). Using these functions, let's create a plot to compare different the different stats for different pitch types specifically the percentage stats.
 
 ```{r}
 #| label: pitch_type_bar_chart
@@ -213,27 +213,47 @@ sc_colors <- c(
 
 # Swing% by pitch type
 pitch_type_rates %>%
-  ggplot(aes(swing_perc, reorder(pitch_type, swing_perc))) +
+  select(-run_value_rate) %>% # drop non-percentage stat
+  pivot_longer(
+    swing_perc:chase_perc,
+    names_to = "stat_name", # name column that will hold the names of the columns to stat_name
+    values_to = "stat_value" # name column that will hold the values of the stat columns to stat_value
+  ) %>%
+  mutate(
+    stat_name = case_match( # make stat names more presentable
+    stat_name,
+    "swing_perc" ~ "Swing%",
+    "swstr_perc" ~ "SwStr%",
+    "whiff_perc" ~ "Whiff%",
+    "zone_perc" ~ "Zone%",
+    "chase_perc" ~ "Chase%"
+    )
+  ) %>%
+  ggplot(aes(stat_value, reorder(pitch_type, stat_value))) +
   geom_col(aes(fill = pitch_type), show.legend = FALSE) +
   # use statcast colors
   scale_fill_manual(values = sc_colors) +  
   # use % on x-axis
-  scale_x_continuous(labels = scales::label_percent(accuracy = 1)) + 
+  scale_x_continuous(labels = scales::label_percent(accuracy = 1)) +
+  facet_wrap(~stat_name, scales = "free_y") + # scales = "free_y" lets the x-axis vary for each facet
   theme_bw() +
   theme(
-    plot.title = element_text(hjust = 0.5),            # center plot title
-    plot.subtitle = element_text(hjust = 0.5)          # and subtitle
+    plot.title = element_text(hjust = 0.5), # center plot title
+    plot.subtitle = element_text(hjust = 0.5) # and subtitle
   ) +
   labs(
-    x = "Swing%",
+    x = "Stat Value",
     y = "Pitch Type",
-    title = "Splitters and Cutters Induce Swings At the Highest Rate",
-    subtitle = "Among Pitches Thrown >= 25 Times | Data Through 4/12",
+    title = "Percentage Stats by Pitch Type",
+    subtitle = "Data Through 4/12",
     caption = "Data: Baseball Savant"
   )
 ```
+
 ### Team Stats
+
 We can also compare team stats.
+
 ```{r}
 #| label: team_data_summary
 # function to summarize data
@@ -274,6 +294,7 @@ team_data <- hitting_stats %>%
   full_join(pitching_stats, by = join_by(batting_team == pitching_team)) %>%
   rename(team = batting_team)
 ```
+
 Let's plot team hitting data and check out the relationship between average exit velocity and xwOBACON!
 
 ```{r}
