@@ -14,7 +14,6 @@ For this analysis, you're going to need a few packages. The [`{tidyverse}`](http
 
 ```{r}
 #| label: load_packages
-#| include: false
 # If you don't have these packages already installed, uncomment
 # the lines with install.packages() and run them as well
 
@@ -58,11 +57,11 @@ dim(mlb_data)
 # using the RStudio IDE
 ```
 
-The `dim()` function tell us that our dataframe has 46,042 rows of 92 different variables. You can look at the different columns and the type of data they store with the `str()` function.
+The `dim()` function tells us that our data frame has 46,042 rows of 92 different variables. You can look at the different columns and the type of data they store with the `str()` function.
 
-### Add Data
+### Add Columns
 
-We need to create some additional columns that will easily let us summarize our data, and this is pretty easy with the `dplyr::mutate()` + `dplyr::if_else()` combo. The `description` column of our data has info on what events happened on each pitch, so let's create some binary indicators using this column that tell us if different events like a swing, whiff or chase happened, as well as if a pitch was in the zone zone or not. I created the `swing_events` and `whiff_events` vector to hold all the different values of `description` are swing events, as well as whiff events. Using the `%in%` operator, we can then check if the event in `description` is one of the events from each vector. This procedure is how you can determine if a value is included in a group of many possible values.
+We need to create some additional columns that will easily let us summarize our data, and this is pretty easy with the `dplyr::mutate()` + `dplyr::if_else()` combo. The `description` column of our data has info on what events happened on each pitch, so let's create some binary indicators using this column that tell us if different events like a swing, whiff or chase happened, as well as if a pitch was in the strike zone or not. I created the `swing_events` and `whiff_events` vectors to hold all the different values of `description` are swing events, as well as whiff events. Using the `%in%` operator, we can then check if the event in `description` is one of the events from each vector. This procedure is how you can determine if a value is included in a group of many possible values.
 
 ```{r}
 #| label: add_columns
@@ -103,7 +102,7 @@ Now, that our data has everything we need, let's move on to summarizing and expl
 
 ### Summarize Data by Pitch Type
 
-Data can be most efficiently aggregated using `dplyr::summarize()`, and to aggregate by different groups, you can use use `dplyr::group_by()` function to group the data before passing it to `summarize()`. It is best practice to ungroup data after the grouping is no longer need, and this can be done with `dplyr::ungroup()`. However, recently, the `{dplyr}` team added the `.by` argument to `summarize()` were one can supply the name of a column or a vector of column names to perform operations by, essentially a grouping. Grouups are automatically dropped after operations are performed. This addition is convenient because it eliminates the need to use `group_by()` and `ungroup()` in aggregations. For this aggregation let's find the Swing%, SwStr%, Whiff%, Zone%, Chase%, and Run Value/100 for each pitch type, filter out out any rows that are missing a pitch type at the beginning and after aggregating let's drop any pitch type that has been thrown 25 times or less, and the FA pitch type (which is the "Other" pitch types, essentially pitches that didn't get classified).
+Data can be most efficiently aggregated using `dplyr::summarize()`, and to aggregate by different groups, you can use `dplyr::group_by()` function to group the data before passing it to `summarize()`. It is best practice to ungroup data after the grouping is no longer needed, and this can be done with `dplyr::ungroup()`. However, recently, the `{dplyr}` team added the `.by` argument to `summarize()` where one can supply the name of a column or a vector of column names to perform operations by, essentially a grouping. Groups are automatically dropped after operations are performed. This addition is convenient because it eliminates the need to use `group_by()` and `ungroup()` in aggregations. For this aggregation let's find the Swing%, SwStr%, Whiff%, Zone%, Chase%, and Run Value/100 for each pitch type, filter out any rows that are missing a pitch type at the beginning, and after aggregating let's drop any pitch type that has been thrown 25 times or less, and the FA pitch type (which is the "Other" pitch types, essentially pitches that didn't get classified).
 
 ```{r}
 #| label: summarize_by_pitch_type
@@ -193,7 +192,7 @@ pitch_type_rates %>%
   opt_interactive()
   
 ```
-It's also possible to compare each statistic visuallyfor all the pitch types by leveraging`ggplot2::facet_wrap()`, which will create a panel for each unique value of the column you supply it with. To get the data in a format that allows this to work, we need to pivot it into a row for every combination of pitch type and statistic. Luckily, this can easily be done using `tidyr::pivot_longer()`. After the columns containing the different stat value have been pivoted into a single row, we'll change that row using `dplyr::case_match()` to have more presentable names for the statistic than the names that were used for them in the data (eg. 'swstr_perc' to SwStr%). Using these functions, let's create a plot to compare different the different stats for different pitch types specifically the percentage stats.
+It's also possible to compare each statistic visually for all the pitch types by leveraging`ggplot2::facet_wrap()`, which will create a panel for each unique value of the column you supply it with. To get the data in a format that allows this to work, we need to pivot it into a row for every combination of pitch type and statistic. Luckily, this can easily be done using `tidyr::pivot_longer()`. After the columns containing the different stat values have been pivoted into a single row, we'll change that row using `dplyr::case_match()` to have more presentable names for the statistic than the names that were used for them in the data (eg. 'swstr_perc' to SwStr%). Using these functions, let's create a plot to compare different the different stats for different pitch types specifically the percentage stats.
 
 ```{r}
 #| label: pitch_type_bar_chart
