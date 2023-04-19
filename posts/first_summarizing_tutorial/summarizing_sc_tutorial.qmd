@@ -336,6 +336,7 @@ full_mlb %>%
     title = "Stat Progression Over Time"
   )
 ```
+Fastball velocity peaked on opening day and has trended down since, along with SwStr%, while exit velocity and xwOBACON have fluctuated with no clear pattern
 
 ### Team Stats
 It's also easy to take a look at both hitting and pitching data for teams. First, let's write a function, `find_team_stats()` to summarize data for both team hitting and pitching.
