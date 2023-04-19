@@ -5,10 +5,11 @@ date: "2023-04-19"
 categories: [Code, Tutorial, Analysis]
 image: "shohei_viz.jpg"
 ---
-Baseball, more than any other sport at any other point in time, has huge amounts of data available to anybody, largely because of resources like [Baseball Savant](https://baseballsavant.mlb.com/), as well as other fantastic sites like [FanGraphs](https://www.fangraphs.com/) and [Pitcher List](https://www.pitcherlist.com/). Statcast data from Baseball Savant, specifically, is incredible, because it provides a ton of tracking data for every pitch, including pitch speed, release point, movement, as well as hitting metrics like launch angle, exit velocity, and xwOBA. This tutorial is going to walk you through a few different way use can use one of the best programming languages for quick, intuitive data analysis, R, to work with, explore, and visualize Statcast data. R is an awesome tool with a relatively small learning curve, and through the efforts of a lot of awesome people, there is a massive collection of resources to learn R (for free!). This tutorial is for those who are already familiar with R, but if you're a beginner, I can't recommend [R4DS](https://r4ds.had.co.nz/) enough. It is a perfect guide to starting out in R, and especially emphasizes use of the `{tidyverse}`, which makes the entire data science process and workflow far more intuitive and uniform. Now, on to the tutorial!
-### Load in Packages
-For this analysis, you're going to need a few packages. The [`{tidyverse}`](https://www.tidyverse.org/) is essential for every project and includes packages for data manipulation, visualization, and more. Additionally, the [`{baseballr}`](https://billpetti.github.io/baseballr/) package lets us scrape Statcast data directly from the MLB API into our R session. Lastly, the [`{gt}`](https://gt.rstudio.com/) and [`{gtExtras}`](https://jthomasmock.github.io/gtExtras/) packages help us easily build presentable tables and the [`{mlbplotR}`](https://camdenk.github.io/mlbplotR/) package makes it easy to incorporate MLB logos and headshots into our plots an tables.
+Baseball, more than any other sport at any other point in time, has huge amounts of data available to anybody, largely because of resources like [Baseball Savant](https://baseballsavant.mlb.com/), as well as other fantastic sites like [FanGraphs](https://www.fangraphs.com/) and [Pitcher List](https://www.pitcherlist.com/). Statcast data from Baseball Savant, specifically, is incredible, because it provides a ton of tracking data for every pitch, including pitch speed, release point, and movement, as well as hitting metrics like launch angle, exit velocity, and xwOBA. This tutorial is going to walk you through a few different way use can use one of the best programming languages for quick, concise data analysis, R, to work with, explore, and visualize Statcast data. R is an awesome tool with a relatively small learning curve, and through the efforts of a lot of awesome people, there is a massive collection of resources to learn R (for free!). This tutorial is for those who are already familiar with R, but if you're a beginner, I can't recommend [R4DS](https://r4ds.had.co.nz/) enough. It is a perfect guide to starting out in R, and especially emphasizes use of the `{tidyverse}`, which makes the entire data science process and workflow far more intuitive and uniform. Now, on to the tutorial!
 
+### Load in Packages
+
+For this analysis, you're going to need a few packages. The [`{tidyverse}`](https://www.tidyverse.org/) is essential for every project and includes packages for data manipulation, visualization, and more. Additionally, the [`{baseballr}`](https://billpetti.github.io/baseballr/) package lets us scrape Statcast data directly from the MLB API into our R session and the [`{mlbplotR}`](https://camdenk.github.io/mlbplotR/) package makes it easy to incorporate MLB logos and headshots into our plots an tables. Lastly, the [`{gt}`](https://gt.rstudio.com/) packages lets us easily build presentable tables and the [`{ggtext}`](https://wilkelab.org/ggtext/) package lets us use HTML in our our plot titles.
 ```{r}
 #| label: load_packages
 # If you don't have these packages already installed, uncomment
@@ -29,7 +30,7 @@ library(ggtext)
 
 ### Load in Data
 
-Next, let's load in our data. For this tutorial, we're going to scrape about the first two weeks of the 2023 season.
+Next, let's load in our data. For this tutorial, we're going to scrape the first three weeks of the 2023 season.
 ```{r}
 #| label: import_data
 data1 <- statcast_search(
@@ -50,26 +51,29 @@ data3 <- statcast_search(
   player_type = "pitcher"
   )
 
-mlb_data <- data1 %>%
-  bind_rows(data2, data3)
+data4 <- statcast_search(
+  start_date = "2023-04-14",
+  end_date = "2023-04-18",
+  player_type = "pitcher"
+  )
 
-rm(data1, data2, data3)
+mlb_data <- data1 %>%
+  bind_rows(data2, data3, data4)
+
+rm(data1, data2, data3, data4)
 
 dim(mlb_data)
 
 # You can also run View(mlb_data) to open up the data in a tab if you are
 # using the RStudio IDE
 ```
-
-The `dim()` function tells us that our data frame has 46,042 rows of 92 different variables. You can look at the different columns and the type of data they store with the `str()` function.
+The `dim()` function tells us that our data frame has **78713** rows of **92** different variables. You can look at the different columns and the type of data they store with the `str()` function.
 
 ### Add Columns
 
-We need to create some additional columns that will easily let us summarize our data, and this is pretty easy with the `dplyr::mutate()` + `dplyr::if_else()` combo. The `description` column of our data has info on what events happened on each pitch, so let's create some binary indicators using this column that tell us if different events like a swing, whiff or chase happened, as well as if a pitch was in the strike zone or not. I created the `swing_events` and `whiff_events` vectors to hold all the different values of `description` are swing events, as well as whiff events. Using the `%in%` operator, we can then check if the event in `description` is one of the events from each vector. This procedure is how you can determine if a value is included in a group of many possible values.
-
+We need to create some additional columns that will easily let us summarize our data, and this is pretty simple with the `dplyr::mutate()` + `dplyr::if_else()` combo. First, let’s use `baseballr::mlb_people()` to get the names of the hitters. The description column of our data has info on what events happened on each pitch, so let’s create some binary indicators using this column that tell us if different events like a swing, whiff or chase happened, as well as who the batting and pitching teams are. I created the swing_events and whiff_events vectors to hold all the different values of description that are swing events, as well as whiff events. Using the %in% operator, we can then check if the event in description is one of the events from each vector. This procedure is how you can determine if a value is included in a group of many possible values.
 ```{r}
 #| label: add_columns
-
 swing_events <- c(
   "foul_tip", "swinging_strike", "swinging_strike_blocked", 
     "missed_bunt", "foul", "hit_into_play", "foul_bunt", "bunt_foul_tip"
@@ -105,13 +109,11 @@ full_mlb <- mlb_data %>%
   ) %>%
   left_join(hitter_names, by = "batter")
 ```
-
 Now, that our data has everything we need, let's move on to summarizing and exploring it!
 
-### Summarize Data by Pitch Type
+### Pitch Type
 
-Data can be most efficiently aggregated using `dplyr::summarize()`, and to aggregate by different groups, you can use `dplyr::group_by()` function to group the data before passing it to `summarize()`. It is best practice to ungroup data after the grouping is no longer needed, and this can be done with `dplyr::ungroup()`. However, recently, the `{dplyr}` team added the `.by` argument to `summarize()` where one can supply the name of a column or a vector of column names to perform operations by, essentially a grouping. Groups are automatically dropped after operations are performed. This addition is convenient because it eliminates the need to use `group_by()` and `ungroup()` in aggregations. For this aggregation let's find the Swing%, SwStr%, Whiff%, Zone%, Chase%, and Run Value/100 for each pitch type, filter out any rows that are missing a pitch type at the beginning, and after aggregating let's drop any pitch type that has been thrown 25 times or less, and the FA pitch type (which is the "Other" pitch types, essentially pitches that didn't get classified).
-
+Data can be most efficiently aggregated using `dplyr::summarize()`, and to aggregate by different groups, you can use `dplyr::group_by()` function to group the data before passing it to `summarize()`. It is best practice to ungroup data after the grouping is no longer needed, and this can be done with `dplyr::ungroup()`. However, the `{dplyr}` team recently added the `.by` argument to `summarize()`, where one can supply the name of a column or a vector of column names to perform operations by, essentially a grouping. Groups are automatically dropped after operations are performed. This addition is convenient because it eliminates the need to use `group_by()` and `ungroup()` in aggregations. For this aggregation, let's filter out any rows that are missing a pitch type (including rows that have the "FA" pitch type, which is "Other" pitches), then find the Swing%, SwStr%, Whiff%, Zone%, Chase%, and Run Value/100 for each pitch type, and after aggregating let's drop any pitch type that has been thrown 25 times or less.
 ```{r}
 #| label: summarize_by_pitch_type
 # Rates of events for each pitch type
@@ -119,7 +121,7 @@ pitch_type_rates <- full_mlb %>%
   filter(
     !is.na(pitch_type),
     !pitch_type == "",
-    !pitch_type == "FA"
+    !pitch_type == "FA" # leave out "Other" pitch type
   ) %>%
   summarize(
     pitches = n(),
@@ -131,12 +133,8 @@ pitch_type_rates <- full_mlb %>%
     run_value_rate = mean(delta_run_exp, na.rm = T) * 100,
     .by = pitch_type
   ) %>%
-  filter(
-    pitches >= 25,
-    pitch_type != "FA" # leave out "Other" pitch type
-  )
+  filter(pitches >= 25)
 ```
-
 Now, let's compare the results the different pitch types have garnered this year. A `{gt}` table with `data_color()`, `fmt_percent()` and `fmt_number()` to make the numbers more presentable provides a quick visual representation along with the underlying numeric figures.
 ```{r}
 #| label: pitch_type_table
@@ -202,7 +200,6 @@ pitch_type_rates %>%
 Splitters have induced swings at the highest rate of any pitch, despite only being thrown in the zone 34%.Additionally the forkball, thrown by Mets' rookie Kodai Senga, has had elite results,despite running a Zone% of just 22%. Sinkers, four-seamers, and cutters, unsurprisingly have been placed in the zone the most of any of the pitch types. By run value per 100 pitches, the forkball and slurve have been the best pitch types in 2023, and the knuckle curve and changeup have been the worst.
 
 It's also possible to compare each statistic visually for all the pitch types by leveraging`ggplot2::facet_wrap()`, which will create a panel for each unique value of the column you supply it with. To get the data in a format that allows this to work, we need to pivot it into a row for every combination of pitch type and statistic. Luckily, this can easily be done using `tidyr::pivot_longer()`. After the columns containing the different stat values have been pivoted into a single row, we'll change that row using `dplyr::case_match()` to have more presentable names for the statistic than the names that were used for them in the data (eg. 'swstr_perc' to SwStr%). Using these functions, let's create a plot to compare different the different stats for different pitch types, specifically the percentage stats.
-
 ```{r}
 #| label: pitch_type_bar_chart
 sc_colors <- c(
@@ -260,6 +257,7 @@ pitch_type_rates %>%
 This graph makes it simple to easily pitch types with a quick glance.
 
 ### Over Time
+
 With the same use of `pivot_longer()`, let's check out how a few important stats have progressed league wide. To do this, we summarize our stats by day (`game_date`), and then pivot. We'll look try two different visualizations, `geom_line()` to see the raw values, and `geom_smooth()` to see a smoothed trend.
 ```{r}
 #| label: over_time_plot
@@ -381,7 +379,7 @@ team_data <- hitting_stats %>%
   full_join(pitching_stats, by = join_by(hitting_team == pitching_team)) %>%
   rename(team = hitting_team)
 ```
-First, let's take a look at hitting data. We'll put together a table to find what team have had the best hitting results this year.
+First, let's take a look at hitting data. We'll put together a table to find which teams have had the best hitting results this year.
 ```{r}
 #| label: team_hitting_table
 hitting_stats %>%
@@ -418,9 +416,9 @@ hitting_stats %>%
   tab_header("2023 Team Hitting Stats") %>%
   opt_interactive()
 ```
-By wOBA, the Rays, Braves, and Orioles have has the best team offenses this year. The Rays and the Orioles have succeeded with more contact-oriented lineups, whereas the Braves have absolutely mashed the ball this year, leading all teams with a 91.2 average exit velocity. The Royals, Tigers, and Twins have has the three worst offenses in baseball so far. All three teams run high swing rates and chase too much or don't make enough contact, and in the Royals case, both.
+By wOBA, the Rays, Braves, and Orioles have has the best team offenses this year. The Rays and the Orioles have succeeded with more contact-oriented lineups, whereas the Braves have absolutely mashed the ball this year, leading all teams with a 90.9 average exit velocity. The Royals, Tigers, and Twins have has the three worst offenses in baseball so far. All three teams run high swing rates and chase too much or don't make enough contact, and in the Royals case, both.
 
-Although the Braves have hit the ball harder than any other team, the Dodgers actually have the best xwOBACON, because they have hit the ball at more optimal angles. Let's find the teams who's contact quality is the most different than what their exit velocities would suggest. We can find the biggest outliers by running a linear regression between xwOBACON and exit velo, and pulling out the 3 biggest negative outliers and positive outliers.
+Although the Braves have hit the ball harder than any other team, the Dodgers actually have the best xwOBACON in baseball, because they have hit the ball at more optimal angles. Let's find the teams who's contact quality is the most different than what their exit velocities would suggest. We can find the biggest outliers by running a linear regression between xwOBACON and exit velo, and pulling out the 3 biggest negative outliers and positive outliers.
 ```{r}
 #| label: ev_vs_xwobacon_hitters
 hitting_outliers <- lm(
@@ -470,7 +468,7 @@ hitting_stats %>%
     title = "Team Average Exit Velo vs. xwOBACON"
   )
 ```
-This plot shows us that the Giants, Rays, and Dodgers have better batted ball quality than what you would expect because they hit the ball at good launch angles, and the Nationals, Marlins, and Angels are the opposite.
+This plot shows us that the Giants, Rays, and Dodgers have better batted ball quality than what you would expect because they hit the ball at good launch angles, and the Tigers, Marlins, and Angels have suffered because of their poor launch angles.
 
 Next let's look at team pitching, using the same table we used for team hitting but with pitching data.
 ```{r}
@@ -565,8 +563,10 @@ team_data %>%
   tab_header("2023 Team Pitching vs. Hitting", subtitle = "Data through 4/17") %>%
   opt_interactive()
 ```
-There is a three run per 100 pitches gap between the Rays' hitting and production, showing how elite both their run scoring and suppression has been.
+There is a 2.8 run per 100 pitches gap between the Rays' hitting and production, showing how elite both their run scoring and suppression has been.
+
 ### Individal Players
+
 Lastly, you can use Statcast data to evaluate individual players. Let's build a `{gt}` table to look see which hitters are playing the best currently, and then check out the tendencies of some of the top hitters in the league so far.
 ```{r}
 #| label: individual_hitter_data
@@ -594,7 +594,7 @@ head(individual_hitters)
 ```
 
 ```{r}
-#| individual_hitter_table
+#| label: individual_hitter_table
 individual_hitters %>%
   gt() %>%
   gt_fmt_mlb_headshot('batter', height = 50) %>%
@@ -705,6 +705,7 @@ hard_hit_heatmap <- function(hitter_choice, data = full_mlb){
 
 ```{r}
 #| label: heatmap_vizes
+#| warning: false
 hard_hit_heatmap("Yelich, Christian")
 hard_hit_heatmap("Olson, Matt")
 hard_hit_heatmap("Judge, Aaron")
@@ -770,14 +771,11 @@ location_plot <- function(pitcher_choice, data = full_mlb){
 
 }
 ```
-
 Using this function, we can see where some of the best starting pitchers this year have placed their pitches. Let's check out Sonny Gray, Luis Castillo, and Shohei Ohtani.
-
 ```{r}
 #| label: pitcher_loc_viz
 location_plot("Gray, Sonny")
 location_plot("Castillo, Luis")
 location_plot("Ohtani, Shohei")
 ```
-
 Statcast data opens up the opportunity for so much analysis, and R makes it simple to do so. I hope you enjoyed this tutorial and were able to learn from it. Feel free to reach out to on Twitter \@Drew_Haugen if you have any questions!
