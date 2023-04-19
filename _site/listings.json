@@ -2,10 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/first_summarizing_tutorial/summarizing_sc_tutorial.html",
-      "/posts/my_post/savant_post.html",
-      "/posts/post-with-code/index.html",
-      "/posts/welcome/index.html"
+      "/posts/first_summarizing_tutorial/summarizing_sc_tutorial.html"
     ]
   }
 ]
