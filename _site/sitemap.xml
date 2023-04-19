@@ -2,11 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://drew-haugen.netlify.app/about.html</loc>
-    <lastmod>2023-04-19T21:13:24.954Z</lastmod>
+    <lastmod>2023-04-19T23:30:34.021Z</lastmod>
   </url>
   <url>
     <loc>https://drew-haugen.netlify.app/index.html</loc>
-    <lastmod>2023-04-19T21:28:45.142Z</lastmod>
+    <lastmod>2023-04-19T23:30:20.719Z</lastmod>
   </url>
   <url>
     <loc>https://drew-haugen.netlify.app/posts/my_post/savant_post.html</loc>
@@ -22,6 +22,10 @@
   </url>
   <url>
     <loc>https://drew-haugen.netlify.app/posts/first_summarizing_tutorial/summarizing_sc_tutorial.html</loc>
-    <lastmod>2023-04-19T21:29:45.659Z</lastmod>
+    <lastmod>2023-04-19T23:20:57.464Z</lastmod>
+  </url>
+  <url>
+    <loc>https://drew-haugen.netlify.app/posts/exploring_statcast/exploring_statcast_data_in_r.html</loc>
+    <lastmod>2023-04-19T23:30:05.463Z</lastmod>
   </url>
 </urlset>
